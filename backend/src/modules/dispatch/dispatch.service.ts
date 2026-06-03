@@ -56,36 +56,162 @@ export class DispatchService {
         })
     }
 
-    async dispatchIncidentUpdate(data: UpdateAssignmentStatusDto, id: string) {
-        const result = await this.prisma.assignment.update({
-            where: {
-                id
-            },
-            data: {}
+    async acceptDispatch(data: UpdateAssignmentStatusDto) {
+        const verifyAssignmet = await this.prisma.assignment.findUnique({
+            where: { id: data.assignmentId }
         })
-        return result
-    }
-
-    async dispatchIncidentDelete(id: string) {
-        const result = await this.prisma.assignment.delete({
-            where: {
-                id
+        if (!verifyAssignmet) {
+            throw new NotFoundException("Despacho não encontrado")
+        }
+        if (verifyAssignmet.status !== "ASSIGNED") {
+            throw new BadRequestException("Despacho não está pendente")
+        }
+        await this.prisma.$transaction(async (tx) => {
+            await tx.assignment.update({
+                where: {
+                    id: data.assignmentId
+                },
+                data: {
+                    status: "ACCEPTED",
+                    acceptedAt: new Date()
+                }
+            })
+            await tx.vehicule.update({
+                where: {
+                    id: data.vehiculeId
+                },
+                data: {
+                    status: "EN_ROUTE"
+                }
+            })
+            return {
+                message: "Despacho aceito com sucesso"
             }
         })
-        return result
     }
 
-    async dispatchIncidentGetById(id: string) {
-        const result = await this.prisma.assignment.findUnique({
-            where: {
-                id
+    async startRoute(data: UpdateAssignmentStatusDto) {
+        const verifyAssignment = await this.prisma.assignment.findUnique({
+            where: { id: data.assignmentId }
+        })
+        if (!verifyAssignment) {
+            throw new NotFoundException("Despacho não encontrado")
+        }
+        if (verifyAssignment.status !== "ACCEPTED") {
+            throw new BadRequestException("Despacho não está aceito")
+        }
+        await this.prisma.$transaction(async (tx) => {
+            await tx.assignment.update({
+                where: {
+                    id: data.assignmentId
+                },
+                data: {
+                    status: "EN_ROUTE",
+                    arrivedAt: new Date()
+                }
+            })
+            await tx.vehicule.update({
+                where: {
+                    id: data.vehiculeId
+                },
+                data: {
+                    status: "EN_ROUTE"
+                }
+            })
+            return {
+                message: "Rota iniciada com sucesso"
             }
         })
-        return result
     }
 
-    async dispatchIncidentGetAll() {
-        const result = await this.prisma.assignment.findMany()
-        return result
+    async arrivedAtScene(data: UpdateAssignmentStatusDto) {
+        const verifyAssignment = await this.prisma.assignment.findUnique({
+            where: { id: data.assignmentId }
+        })
+        if (!verifyAssignment) {
+            throw new NotFoundException("Despacho não encontrado")
+        }
+        if (verifyAssignment.status !== "EN_ROUTE") {
+            throw new BadRequestException("Despacho não está em rota")
+        }
+        await this.prisma.$transaction(async (tx) => {
+            await tx.assignment.update({
+                where: {
+                    id: data.assignmentId
+                },
+                data: {
+                    status: "ARRIVED",
+                    arrivedAt: new Date()
+                }
+            })
+            await tx.vehicule.update({
+                where: {
+                    id: data.vehiculeId
+                },
+                data: {
+                    status: "AT_INCIDENT"
+                }
+            })
+            return {
+                message: "Chegada ao local realizada com sucesso"
+            }
+        })
+    }
+
+    async completedDispatch(data: UpdateAssignmentStatusDto, incidentId: string) {
+        const verifyAssignment = await this.prisma.assignment.findUnique({
+            where: { id: data.assignmentId }
+        })
+        if (!verifyAssignment) {
+            throw new NotFoundException("Despacho não encontrado")
+        }
+        if (verifyAssignment.status !== "ARRIVED") {
+            throw new BadRequestException("Despacho não está no local")
+        }
+        await this.prisma.$transaction(async (tx) => {
+            await tx.assignment.update({
+                where: {
+                    id: data.assignmentId
+                },
+                data: {
+                    status: "COMPLETED",
+                    completedAt: new Date()
+                }
+            })
+            await tx.vehicule.update({
+                where: {
+                    id: data.vehiculeId
+                },
+                data: {
+                    status: "AVAILABLE"
+                }
+            })
+            const activeAssignments = await tx.assignment.count({
+                where: {
+                    incidentId: verifyAssignment.incidentId,
+                    status: {
+                        in: [
+                            "ASSIGNED",
+                            "ACCEPTED",
+                            "EN_ROUTE",
+                            "ARRIVED",
+                        ],
+                    },
+                },
+            })
+            if (activeAssignments === 0) {
+                await tx.incident.update({
+                    where: {
+                        id: incidentId
+                    },
+                    data: {
+                        status: "RESOLVED"
+                    }
+                })
+            }
+            return {
+                message: "Despacho concluído com sucesso"
+            }
+        })
     }
 }

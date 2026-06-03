@@ -39,6 +39,15 @@ enum VehiculeType {
   TOW_TRUCK
 }
 
+enum AssignmentStatus {
+  ASSIGNED
+  ACCEPTED
+  EN_ROUTE
+  ARRIVED
+  COMPLETED
+  CANCELLED
+}
+
 enum Role {
   ADMIN
   USER
@@ -89,9 +98,13 @@ model Assignment {
   vehiculeId String
 
   incident Incident @relation(fields: [incidentId], references: [id])
-  vehicule Vehicule @relation(fields: [vehiculeId], references: [id]) 
+  vehicule Vehicule @relation(fields: [vehiculeId], references: [id])
+
+  status AssignmentStatus @default(ASSIGNED)
 
   assignedAt DateTime @default(now())
+
+  acceptedAt DateTime?
 
   arrivedAt DateTime?
 
