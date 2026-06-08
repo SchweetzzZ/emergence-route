@@ -1,12 +1,12 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common"
 import { PrismaService } from "../prisma/prisma.service"
-import { AssignVehiculeDto, UpdateAssignmentStatusDto } from "./schemas/zod-validation"
+import { DispatchDto, DispatchStatusDto } from "./schemas/zod-validation"
 
 @Injectable()
 export class DispatchService {
     constructor(private prisma: PrismaService) { }
 
-    async dispatchIncident(data: AssignVehiculeDto) {
+    async dispatchIncident(data: DispatchDto) {
         const verifyIncident = await this.prisma.incident.findUnique({
             where: { id: data.incidentId }
         })
@@ -56,7 +56,7 @@ export class DispatchService {
         })
     }
 
-    async acceptDispatch(data: UpdateAssignmentStatusDto) {
+    async acceptDispatch(data: DispatchStatusDto) {
         const verifyAssignmet = await this.prisma.assignment.findUnique({
             where: { id: data.assignmentId }
         })
@@ -90,7 +90,7 @@ export class DispatchService {
         })
     }
 
-    async startRoute(data: UpdateAssignmentStatusDto) {
+    async startRoute(data: DispatchStatusDto) {
         const verifyAssignment = await this.prisma.assignment.findUnique({
             where: { id: data.assignmentId }
         })
@@ -124,7 +124,7 @@ export class DispatchService {
         })
     }
 
-    async arrivedAtScene(data: UpdateAssignmentStatusDto) {
+    async arrivedAtScene(data: DispatchStatusDto) {
         const verifyAssignment = await this.prisma.assignment.findUnique({
             where: { id: data.assignmentId }
         })
@@ -158,7 +158,7 @@ export class DispatchService {
         })
     }
 
-    async completedDispatch(data: UpdateAssignmentStatusDto, incidentId: string) {
+    async completedDispatch(data: DispatchStatusDto) {
         const verifyAssignment = await this.prisma.assignment.findUnique({
             where: { id: data.assignmentId }
         })
@@ -202,7 +202,7 @@ export class DispatchService {
             if (activeAssignments === 0) {
                 await tx.incident.update({
                     where: {
-                        id: incidentId
+                        id: data.incidentId
                     },
                     data: {
                         status: "RESOLVED"

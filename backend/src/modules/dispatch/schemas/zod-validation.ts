@@ -1,17 +1,17 @@
 import { z } from "zod"
 
-export const assignVehiculeSchema = z.object({
+export const DispatchSchema = z.object({
     incidentId: z.string().uuid(),
     vehiculeId: z.string().uuid()
 })
 
-export type AssignVehiculeDto = z.infer<typeof assignVehiculeSchema>
+export type DispatchDto = z.infer<typeof DispatchSchema>
 
-export const updateAssignmentStatusSchema = z.object({
+export const DispatchStatusSchema = z.object({
     status: z.enum(["ASSIGNED", "ACCEPTED", "EN_ROUTE", "ARRIVED", "COMPLETED", "CANCELLED"]),
-
+    incidentId: z.string().uuid(),
     assignmentId: z.string().uuid(),
     vehiculeId: z.string().uuid()
 })
 
-export type UpdateAssignmentStatusDto = z.infer<typeof updateAssignmentStatusSchema>
+export type DispatchStatusDto = z.infer<typeof DispatchStatusSchema>
