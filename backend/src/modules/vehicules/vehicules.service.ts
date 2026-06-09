@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
-import { CreateVehiculeDto, UpdateVehiculeDto } from "./schema/vehicule-zod";
+import { CreateVehiculeDto, FindVehiculesDto, FindIncidentDto, UpdateVehiculeDto } from "./schema/vehicule-zod";
+import { DistanceUtils } from "../utils/calculate-distance";
 
 @Injectable()
 export class VehiculesService {
@@ -44,5 +45,35 @@ export class VehiculesService {
             }
         })
         return vehicule
+    }
+    async findVehicule(incidentId: string) {
+        const incidentVerify = await this.prisma.incident.findUnique({
+            where: {
+                id: incidentId
+            }
+        })
+        if (!incidentVerify) {
+            throw new Error("Incidente não encontrado")
+        }
+        const statusVehicule = await this.prisma.vehicule.findMany({
+            where: {
+                status: "AVAILABLE"
+            }
+        })
+
+        const vehiculeWithDistance = statusVehicule.map((vehicule) => {
+            const distance = DistanceUtils.haversine(
+                incidentVerify.latitude,
+                incidentVerify.longitude,
+                vehicule.latitude,
+                vehicule.longitude,
+            )
+            return {
+                ...vehicule,
+                distance
+            }
+        })
+
+        return vehiculeWithDistance
     }
 }

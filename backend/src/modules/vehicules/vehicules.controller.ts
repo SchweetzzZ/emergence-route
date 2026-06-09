@@ -46,4 +46,10 @@ export class VehiculesController {
         }
         return result
     }
+
+    @Get("nearest/:incidentId")
+    @Permissions(PERMISSIONS.vehicule.read)
+    async findVehicule(@Param("incidentId") incidentId: string) {
+        return this.vehiculeService.findVehicule(incidentId)
+    }
 }

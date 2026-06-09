@@ -21,6 +21,18 @@ export const createVehiculeSchema = z.object({
     longitude: z.number(),
 })
 
+export const findVehiculesSchema = z.object({
+    latitude: z.number(),
+    longitude: z.number(),
+})
+export const findIncidentSchema = z.object({
+    latitude: z.number(),
+    longitude: z.number()
+})
+
+export type FindVehiculesDto = z.infer<typeof findVehiculesSchema>
+export type FindIncidentDto = z.infer<typeof findIncidentSchema>
+
 export type CreateVehiculeDto = z.infer<typeof createVehiculeSchema>
 
 export const updateVehiculeSchema = createVehiculeSchema.partial()
