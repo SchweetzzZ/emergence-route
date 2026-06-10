@@ -72,6 +72,7 @@ model Incident {
   status    IncidentStatus @default(PENDING)
   latitude Float
   longitude Float
+  priority   Int @default(50)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   assignments Assignment[]

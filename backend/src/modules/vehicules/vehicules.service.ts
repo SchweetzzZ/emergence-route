@@ -46,7 +46,7 @@ export class VehiculesService {
         })
         return vehicule
     }
-    async findVehicule(incidentId: string) {
+    async findNearestVehicule(incidentId: string) {
         const incidentVerify = await this.prisma.incident.findUnique({
             where: {
                 id: incidentId
@@ -74,6 +74,6 @@ export class VehiculesService {
             }
         })
 
-        return vehiculeWithDistance
+        return vehiculeWithDistance.sort((a, b) => a.distance - b.distance)
     }
 }

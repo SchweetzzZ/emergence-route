@@ -1,15 +1,20 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { CreateIncidentDto, UpdateIncidentDto } from "./schemas/incident-zod";
+import { RedisService } from "../redis/redis.service";
 
 @Injectable()
 export class IncidentsService {
-    constructor(private prisma: PrismaService) { }
+    constructor(
+        private prisma: PrismaService,
+        private redisService: RedisService
+    ) { }
 
     async createIncident(data: CreateIncidentDto) {
         const result = await this.prisma.incident.create({
             data,
         })
+        await this.redisService.getClient().zadd("pendding_incidents", result.priority, result.id)
         return result
     }
     async updatedIncident(data: UpdateIncidentDto, id: string) {

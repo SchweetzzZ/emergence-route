@@ -1,10 +1,13 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common"
 import { PrismaService } from "../prisma/prisma.service"
 import { DispatchDto, DispatchStatusDto } from "./schemas/zod-validation"
+import { VehiculesService } from "../vehicules/vehicules.service"
 
 @Injectable()
 export class DispatchService {
-    constructor(private prisma: PrismaService) { }
+    constructor(
+        private prisma: PrismaService,
+        private vehiculeService: VehiculesService) { }
 
     async dispatchIncident(data: DispatchDto) {
         const verifyIncident = await this.prisma.incident.findUnique({
@@ -212,6 +215,19 @@ export class DispatchService {
             return {
                 message: "Despacho concluído com sucesso"
             }
+        })
+    }
+    async autoDispatch(incidentId: string) {
+        const nearestVehicules = await this.vehiculeService.findNearestVehicule(incidentId)
+
+        if (!nearestVehicules) {
+            throw new NotFoundException("Nenhum veículo disponível encontrado")
+        }
+        const nearestVehicule = nearestVehicules[0]
+
+        return this.dispatchIncident({
+            incidentId,
+            vehiculeId: nearestVehicule.id
         })
     }
 }
