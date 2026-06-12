@@ -7,9 +7,11 @@ export class RedisService {
     private redis: Redis;
 
     constructor() {
+        const redisHost = process.env.REDIS_HOST || "localhost";
+        const redisPort = process.env.REDIS_PORT ? parseInt(process.env.REDIS_PORT, 10) : 6379;
         this.redis = new Redis({
-            host: "localhost",
-            port: 6379,
+            host: redisHost,
+            port: redisPort,
         });
     }
 

@@ -6,18 +6,28 @@ export class RabbitMQService implements OnModuleInit {
     private channel: amqp.Channel
 
     async onModuleInit() {
-        const connection = await amqp.connect("amqp://localhost:5672")
-        this.channel = await connection.createChannel()
+        const rabbitmqUrl = process.env.RABBITMQ_URL || "amqp://localhost:5672";
+        const maxRetries = 10;
 
-        await this.channel.assertQueue("dispatch_queue",
-            {
-                durable: true
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                const connection = await amqp.connect(rabbitmqUrl);
+                this.channel = await connection.createChannel();
+
+                await this.channel.assertQueue("dispatch_queue", {
+                    durable: true,
+                });
+                console.log("rabbitMQ conectado");
+                return;
+            } catch (err) {
+                console.log(`RabbitMQ tentativa ${attempt}/${maxRetries} falhou, tentando novamente em ${attempt * 2}s...`);
+                if (attempt === maxRetries) throw err;
+                await new Promise((r) => setTimeout(r, attempt * 2000));
             }
-        )
-        console.log("rabbitMQ conectado")
+        }
     }
 
-    async getChannel() {
+    getChannel() {
         return this.channel
     }
 
@@ -26,6 +36,9 @@ export class RabbitMQService implements OnModuleInit {
         incidentId: string,
         vehiculeId: string,
     }) {
+        if (!this.channel) {
+            throw new Error("RabbitMQ não conectado")
+        }
         this.channel.sendToQueue("dispatch_queue", Buffer.from(JSON.stringify(payload)),
             {
                 persistent: true

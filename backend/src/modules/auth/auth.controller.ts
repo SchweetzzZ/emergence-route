@@ -1,4 +1,4 @@
-import { Controller, Post, Res } from "@nestjs/common"
+import { Controller, Get, Post, Res } from "@nestjs/common"
 import { AuthService } from "./auth.service"
 import type { RegisterDto, LoginDto } from "./schemas/auth-zod"
 import { registerSchema, loginSchema } from "./schemas/auth-zod"
@@ -26,5 +26,9 @@ export class AuthController {
         })
 
         return result
+    }
+    @Get('test')
+    async test() {
+        return "test"
     }
 }

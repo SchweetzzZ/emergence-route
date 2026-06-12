@@ -1,0 +1,37 @@
+import { Injectable, OnModuleInit } from "@nestjs/common";
+import * as amqp from "amqplib"
+
+@Injectable()
+export class RabbitMQConsumer implements OnModuleInit {
+    async onModuleInit() {
+        const rabbitmqUrl = process.env.RABBITMQ_URL || "amqp://localhost:5672"
+        const maxRetries = 10;
+
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                const connection = await amqp.connect(rabbitmqUrl)
+                const chanel = await connection.createChannel()
+
+                await chanel.assertQueue("dispatch_queue", {
+                    durable: true,
+                })
+
+                chanel.consume(
+                    "dispatch_queue",
+                    (message) => {
+                        if (!message) return
+                        const content = JSON.parse(message.content.toString())
+                        console.log("Mensagem recebida", content)
+                        chanel.ack(message)
+                    }
+                )
+                console.log("RabbitMQ Consumer conectado")
+                return;
+            } catch (err) {
+                console.log(`RabbitMQ Consumer tentativa ${attempt}/${maxRetries} falhou, tentando novamente em ${attempt * 2}s...`);
+                if (attempt === maxRetries) throw err;
+                await new Promise((r) => setTimeout(r, attempt * 2000));
+            }
+        }
+    }
+}
