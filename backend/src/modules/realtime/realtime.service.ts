@@ -26,7 +26,8 @@ export class RealtimeService implements OnGatewayConnection, OnGatewayDisconnect
             client.handshake.query?.token
 
             if (token) {
-                const payload = this.jwtService.verify(token, { secret: process.env.jwtSecret })
+                const secret = process.env.JWT_SECRET || process.env.jwtSecret || 'secret';
+                const payload = this.jwtService.verify(token, { secret })
                 client.data.user = payload
                 console.log(`Cliente autenticado conectado: ${payload.email} (Socket ID: ${client.id})`);
             } else {
@@ -47,7 +48,7 @@ export class RealtimeService implements OnGatewayConnection, OnGatewayDisconnect
     handleVehiculeJoin(
         @ConnectedSocket() client: Socket,
         @MessageBody() payload: { vehiculeId: string }) {
-        const room = `vehicule${payload.vehiculeId}`
+        const room = `vehicule:${payload.vehiculeId}`
         client.join(room)
 
         console.log(`Cliente ${client.id} entrou na sala ${room}`)
@@ -59,7 +60,7 @@ export class RealtimeService implements OnGatewayConnection, OnGatewayDisconnect
     handleVehiculeLeave(
         @ConnectedSocket() client: Socket,
         @MessageBody() payload: { vehiculeId: string }) {
-        const room = `vehicule${payload.vehiculeId}`
+        const room = `vehicule:${payload.vehiculeId}`
         client.leave(room)
 
         console.log(`Cliente ${client.id} saiu da sala ${room}`)
@@ -71,7 +72,7 @@ export class RealtimeService implements OnGatewayConnection, OnGatewayDisconnect
     handleIncidentJoin(
         @ConnectedSocket() client: Socket,
         @MessageBody() payload: { incidentId: string }) {
-        const room = `incident${payload.incidentId}`
+        const room = `incident:${payload.incidentId}`
         client.join(room)
 
         console.log(`Cliente ${client.id} entrou na sala ${room}`)
@@ -83,7 +84,7 @@ export class RealtimeService implements OnGatewayConnection, OnGatewayDisconnect
     handleIncidentLeave(
         @ConnectedSocket() client: Socket,
         @MessageBody() payload: { incidentId: string }) {
-        const room = `incident${payload.incidentId}`
+        const room = `incident:${payload.incidentId}`
         client.leave(room)
 
         console.log(`Cliente ${client.id} saiu da sala ${room}`)
@@ -92,12 +93,16 @@ export class RealtimeService implements OnGatewayConnection, OnGatewayDisconnect
     }
 
     emitVehiculeLocationUpdate(vehiculeId: string, latitude: number, longitude: number) {
-        this.server.to(`vehicle:${vehiculeId}`).emit(`vehicle.location.updated`,
+        this.server.to(`vehicule:${vehiculeId}`).emit(`vehicule.location.updated`,
             {
                 vehiculeId,
                 latitude,
                 longitude
             }
         )
+    }
+
+    notifyDispatchAssigned(vehiculeId: string, payload: unknown) {
+        this.server.to(`vehicule:${vehiculeId}`).emit(`dispatch_assigned`, payload)
     }
 }

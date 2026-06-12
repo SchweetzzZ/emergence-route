@@ -1,8 +1,11 @@
 import { Injectable, OnModuleInit } from "@nestjs/common";
 import * as amqp from "amqplib"
+import { RealtimeService } from "../realtime/realtime.service";
 
 @Injectable()
 export class RabbitMQConsumer implements OnModuleInit {
+    constructor(private readonly realtimeService: RealtimeService) { }
+
     async onModuleInit() {
         const rabbitmqUrl = process.env.RABBITMQ_URL || "amqp://localhost:5672"
         const maxRetries = 10;
@@ -21,7 +24,13 @@ export class RabbitMQConsumer implements OnModuleInit {
                     (message) => {
                         if (!message) return
                         const content = JSON.parse(message.content.toString())
+
                         console.log("Mensagem recebida", content)
+
+                        this.realtimeService.notifyDispatchAssigned(
+                            content.vehiculeId,
+                            content
+                        )
                         chanel.ack(message)
                     }
                 )
