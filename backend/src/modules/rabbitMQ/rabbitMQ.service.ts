@@ -21,7 +21,10 @@ export class RabbitMQService implements OnModuleInit {
                 return;
             } catch (err) {
                 console.log(`RabbitMQ tentativa ${attempt}/${maxRetries} falhou, tentando novamente em ${attempt * 2}s...`);
-                if (attempt === maxRetries) throw err;
+                if (attempt === maxRetries) {
+                    console.error("RabbitMQ indisponível. API iniciada sem mensageria.");
+                    return;
+                }
                 await new Promise((r) => setTimeout(r, attempt * 2000));
             }
         }
@@ -37,7 +40,8 @@ export class RabbitMQService implements OnModuleInit {
         vehiculeId: string,
     }) {
         if (!this.channel) {
-            throw new Error("RabbitMQ não conectado")
+            console.error("Aviso: RabbitMQ não conectado. Mensagem de despacho ignorada.");
+            return;
         }
         this.channel.sendToQueue("dispatch_queue", Buffer.from(JSON.stringify(payload)),
             {

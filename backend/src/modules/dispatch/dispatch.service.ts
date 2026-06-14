@@ -3,13 +3,16 @@ import { PrismaService } from "../prisma/prisma.service"
 import { DispatchDto, DispatchStatusDto } from "./schemas/zod-validation"
 import { VehiculesService } from "../vehicules/vehicules.service"
 import { RabbitMQService } from "../rabbitMQ/rabbitMQ.service"
+import { KafkaService } from "../kafka/kafka.service"
 
 @Injectable()
 export class DispatchService {
     constructor(
         private prisma: PrismaService,
         private vehiculeService: VehiculesService,
-        private rabbitMQService: RabbitMQService) { }
+        private rabbitMQService: RabbitMQService,
+        private kafkaService: KafkaService
+    ) { }
 
     async dispatchIncident(data: DispatchDto) {
         const verifyIncident = await this.prisma.incident.findUnique({
@@ -60,6 +63,12 @@ export class DispatchService {
                 incidentId: assignment.incidentId,
                 vehiculeId: assignment.vehiculeId
             })
+            await this.kafkaService.publishAuditEvent("DISPATCH_ASSIGNED", {
+                assignmentId: assignment.id,
+                incidentId: assignment.incidentId,
+                vehiculeId: assignment.vehiculeId,
+                timestamp: new Date()
+            })
             return assignment
         })
     }
@@ -91,6 +100,12 @@ export class DispatchService {
                 data: {
                     status: "EN_ROUTE"
                 }
+            })
+            await this.kafkaService.publishAuditEvent("DISPATCH_ACCEPTED", {
+                assignmentId: data.assignmentId,
+                vehiculeId: data.vehiculeId,
+                incidentId: verifyAssignmet.incidentId,
+                timestamp: new Date()
             })
             return {
                 message: "Despacho aceito com sucesso"
@@ -126,6 +141,12 @@ export class DispatchService {
                     status: "EN_ROUTE"
                 }
             })
+            await this.kafkaService.publishAuditEvent("EN_ROUTE", {
+                assignmentId: data.assignmentId,
+                vehiculeId: data.vehiculeId,
+                incidentId: verifyAssignment.incidentId,
+                timestamp: new Date()
+            })
             return {
                 message: "Rota iniciada com sucesso"
             }
@@ -159,6 +180,12 @@ export class DispatchService {
                 data: {
                     status: "AT_INCIDENT"
                 }
+            })
+            await this.kafkaService.publishAuditEvent("ARRIVED_AT_SCENE", {
+                assignmentId: data.assignmentId,
+                vehiculeId: data.vehiculeId,
+                incidentId: verifyAssignment.incidentId,
+                timestamp: new Date()
             })
             return {
                 message: "Chegada ao local realizada com sucesso"
@@ -217,6 +244,12 @@ export class DispatchService {
                     }
                 })
             }
+            await this.kafkaService.publishAuditEvent("DISPATCH_COMPLETED", {
+                assignmentId: data.assignmentId,
+                vehiculeId: data.vehiculeId,
+                incidentId: verifyAssignment.incidentId,
+                timestamp: new Date()
+            })
             return {
                 message: "Despacho concluído com sucesso"
             }

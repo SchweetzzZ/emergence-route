@@ -10,6 +10,7 @@ import { RabbitMQModule } from './modules/rabbitMQ/rabbitMQ.module';
 import { RedisModule } from './modules/redis/redis.module';
 import { RealtimeModule } from './modules/realtime/realtime.module';
 import { TelemetryModule } from './modules/telemetry/telemetry.module';
+import { KafkaModule } from './modules/kafka/kafka.module';
 
 @Module({
   imports: [
@@ -21,7 +22,8 @@ import { TelemetryModule } from './modules/telemetry/telemetry.module';
     RabbitMQModule,
     RedisModule,
     RealtimeModule,
-    TelemetryModule
+    TelemetryModule,
+    KafkaModule
   ],
   controllers: [AppController],
   providers: [AppService],

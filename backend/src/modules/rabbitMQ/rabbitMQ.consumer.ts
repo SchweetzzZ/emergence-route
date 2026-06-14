@@ -38,7 +38,10 @@ export class RabbitMQConsumer implements OnModuleInit {
                 return;
             } catch (err) {
                 console.log(`RabbitMQ Consumer tentativa ${attempt}/${maxRetries} falhou, tentando novamente em ${attempt * 2}s...`);
-                if (attempt === maxRetries) throw err;
+                if (attempt === maxRetries) {
+                    console.error("RabbitMQ Consumer indisponível. Fila não será consumida.");
+                    return;
+                }
                 await new Promise((r) => setTimeout(r, attempt * 2000));
             }
         }
