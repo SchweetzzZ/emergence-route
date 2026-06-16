@@ -87,10 +87,13 @@ model Vehicule {
   status VehiculeStatus @default(AVAILABLE)
   latitude Float
   longitude Float
+  trackingEnable Boolean @default(false)
+  lastSeen DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   assignments Assignment[]
   telemetries Telemetry[]
+
 
 }
 
@@ -117,16 +120,18 @@ model Assignment {
 
 model Telemetry {
   id String @id @default(uuid())
-
   vehiculeId String
-  vehicule Vehicule @relation(fields: [vehiculeId], references: [id])
-
   latitude Float
   longitude Float
 
+  speed Float?
+
   createdAt DateTime @default(now())
 
+  vehicule Vehicule @relation(fields: [vehiculeId], references: [id], onDelete: Cascade)
+
   @@index([vehiculeId])
+  @@index([vehiculeId, createdAt])
 }
 
 model Auditlog {
