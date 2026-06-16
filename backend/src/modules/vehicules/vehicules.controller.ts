@@ -52,4 +52,10 @@ export class VehiculesController {
     async findNearestVehicule(@Param("incidentId") incidentId: string) {
         return this.vehiculeService.findNearestVehicule(incidentId)
     }
+
+    @Get("online")
+    @Permissions(PERMISSIONS.vehicule.read)
+    async getOnlineVehicules() {
+        return this.vehiculeService.getOnlineVehicules()
+    }
 }

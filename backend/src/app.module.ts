@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './modules/auth/auth.module';
@@ -9,11 +10,13 @@ import { DispatchModule } from './modules/dispatch/dispatch.module';
 import { RabbitMQModule } from './modules/rabbitMQ/rabbitMQ.module';
 import { RedisModule } from './modules/redis/redis.module';
 import { RealtimeModule } from './modules/realtime/realtime.module';
-import { TelemetryModule } from './modules/telemetry/telemetry.module';
 import { KafkaModule } from './modules/kafka/kafka.module';
+import { TrackingModule } from './modules/tracking/tracking.module';
+import { HealthModule } from './modules/health/health.module';
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     AuthModule,
     IncidentsModule,
     VehiculesModule,
@@ -22,8 +25,9 @@ import { KafkaModule } from './modules/kafka/kafka.module';
     RabbitMQModule,
     RedisModule,
     RealtimeModule,
-    TelemetryModule,
-    KafkaModule
+    KafkaModule,
+    TrackingModule,
+    HealthModule,
   ],
   controllers: [AppController],
   providers: [AppService],

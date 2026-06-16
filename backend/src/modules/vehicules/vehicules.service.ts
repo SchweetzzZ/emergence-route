@@ -76,4 +76,20 @@ export class VehiculesService {
 
         return vehiculeWithDistance.sort((a, b) => a.distance - b.distance)
     }
+
+    async getOnlineVehicules() {
+        const vehicules = await this.prisma.vehicule.findMany({
+            where: {
+                trackingEnable: true
+            },
+            select: {
+                id: true,
+                name: true,
+                latitude: true,
+                longitude: true,
+                lastSeen: true
+            }
+        })
+        return vehicules
+    }
 }
