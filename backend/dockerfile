@@ -24,6 +24,7 @@ COPY nest-cli.json ./
 COPY prisma ./prisma
 COPY prisma.config.ts ./
 COPY src ./src
+COPY public ./public
 
 # Gerar o Prisma Client (necessário no build para gerar os tipos no node_modules)
 RUN npx prisma generate
