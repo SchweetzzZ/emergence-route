@@ -1,14 +1,18 @@
-import { Body, Controller, Get, Param, Post, Query } from "@nestjs/common";
+import { Body, Controller, Get, Param, Post, Query, UseGuards } from "@nestjs/common";
 import { TrackingService } from "./tracking.service";
 import { TrackingSchema } from "./schemas/zod-validation";
 import type { TrackingInputDTO } from "./schemas/zod-validation";
 import { ZodBody } from "../common/decorators/zod.decorator";
+import { JwtAuthGuard } from "../common/guards/jwt-auth.guard";
+import { PermissionGuard } from "../common/guards/permissions.guard";
+import { RoleGuard } from "../common/guards/role.guard";
 
 @Controller('tracking')
 export class TrackingController {
     constructor(private readonly trackingService: TrackingService) { }
 
     @Post()
+    @UseGuards(JwtAuthGuard, PermissionGuard, RoleGuard)
     async updateLocation(@ZodBody(TrackingSchema) data: TrackingInputDTO) {
         return this.trackingService.handleLocation(data)
     }

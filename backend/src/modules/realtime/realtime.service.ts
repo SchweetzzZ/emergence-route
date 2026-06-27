@@ -6,7 +6,6 @@ import {
 import { Server, Socket } from "socket.io"
 import { JwtService } from "@nestjs/jwt";
 import { KafkaService } from "../kafka/kafka.service";
-import { success } from "zod";
 
 @WebSocketGateway({
     cors: {
@@ -36,6 +35,9 @@ export class RealtimeService implements OnGatewayConnection, OnGatewayDisconnect
                 console.log(`Cliente autenticado conectado: ${payload.email} (Socket ID: ${client.id})`);
             } else {
                 console.log(`Cliente anônimo conectado (Socket ID: ${client.id})`);
+                client.emit("requires_auth", "Autenticação JWT necessária")
+                client.disconnect(true)
+                return
             }
         }
         catch (error) {

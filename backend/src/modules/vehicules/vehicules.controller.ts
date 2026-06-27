@@ -7,23 +7,26 @@ import { JwtAuthGuard } from "../common/guards/jwt-auth.guard"
 import { PermissionGuard } from "../common/guards/permissions.guard"
 import { Permissions } from "../common/decorators/permission.decorator"
 import { PERMISSIONS } from "../common/enums/permissions.enum"
+import { RoleGuard } from "../common/guards/role.guard"
 
 @Controller("vehicules")
-@UseGuards(JwtAuthGuard, PermissionGuard)
 export class VehiculesController {
     constructor(private readonly vehiculeService: VehiculesService) { }
 
     @Post()
+    @UseGuards(JwtAuthGuard, PermissionGuard, RoleGuard,)
     async createVehicule(@ZodBody(createVehiculeSchema) data: CreateVehiculeDto) {
         return this.vehiculeService.createVehicule(data)
     }
 
     @Put(":id")
+    @UseGuards(JwtAuthGuard, PermissionGuard, RoleGuard)
     async updateVehicule(@ZodBody(updateVehiculeSchema) data: UpdateVehiculeDto, @Param("id") id: string) {
         return this.vehiculeService.updateVehicule(id, data)
     }
 
     @Delete(":id")
+    @UseGuards(JwtAuthGuard, PermissionGuard, RoleGuard)
     async deleteVehicule(@Param("id") id: string) {
         return this.vehiculeService.deleteVehicule(id)
     }
@@ -48,6 +51,7 @@ export class VehiculesController {
     }
 
     @Get("online")
+    @UseGuards(JwtAuthGuard, PermissionGuard, RoleGuard)
     async getOnlineVehicules() {
         return this.vehiculeService.getOnlineVehicules()
     }
